@@ -1,0 +1,100 @@
+{
+    "name": "InputManager",
+    "maps": [
+        {
+            "name": "Ant Colony Pathing",
+            "id": "50298c9c-e0a7-44fa-aae1-596916754adf",
+            "actions": [
+                {
+                    "name": "Spawn Point",
+                    "type": "Button",
+                    "id": "86b528f4-efb3-4867-a7b2-61e5a9d77f21",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Clear Points",
+                    "type": "Button",
+                    "id": "54e05b85-61f7-4ae1-a5d1-115342d79029",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Spawn Points",
+                    "type": "Button",
+                    "id": "c0fa6220-a87b-48b6-83e0-b7338004482c",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "FindPath",
+                    "type": "Button",
+                    "id": "ce740642-408b-474f-8fdf-04efa829b4cb",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e94f3af1-da6e-42d9-84ba-3e57654ecfa0",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Spawn Point",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "61dd46df-9ffd-41af-891a-e89c9a896dbc",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Clear Points",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "721ee6b3-2db2-4442-bdee-0281d5239a15",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Spawn Points",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c9a58480-509e-4717-b15f-7544d6160f96",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "FindPath",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Keyboard",
+            "bindingGroup": "Keyboard",
+            "devices": []
+        }
+    ]
+}
