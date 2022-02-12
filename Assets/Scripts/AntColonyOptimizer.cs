@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class AntColonyOptimizer : MonoBehaviour {
     // TODO:
-    // Move the point spawning events into this class, we can regenerate we a point is removed
+    // Move the point spawning events into this class, we can regenerate when a point is removed
     private PointManager PointManager;
     private LineRenderer LineRenderer;
     private InputManager controls;
@@ -85,7 +85,7 @@ public class AntColonyOptimizer : MonoBehaviour {
                 );
             }
             // The distance between a circle and itself is 'undefined'
-            distanceField[i, i] = Mathf.Infinity;
+            distanceField[i, i] = -1;
         }
     }
     // Update is called once per frame
