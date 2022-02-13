@@ -20,7 +20,6 @@ public class AntColonyOptimizer : MonoBehaviour {
     private int antPoint;
     private bool animateAnt;
     private PointManager PointManager;
-    private LineRenderer LineRenderer;
     private InputManager controls;
     private float[,] distanceField;
     private float[,] pheromones;
@@ -30,6 +29,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     [SerializeField] float desirePower;
     [SerializeField] float cycleUpdateRate = .5f;
     private LineRenderer[] antLines;
+    [SerializeField] Material lineMaterial;
     private float[,] deltaPheromones;
     // Start is called before the first frame update
 
@@ -37,7 +37,7 @@ public class AntColonyOptimizer : MonoBehaviour {
         controls = new InputManager();
         antPoint = 1;
         distanceEpsilon = .1f;
-        controls.AntColonyPathing.FindPath.performed += _ => StartCoroutine(AntSystemPath());
+        controls.AntColonyPathing.FindPath.performed += _ => startAnt();
         controls.AntColonyPathing.ClearPoints.performed += _ => ClearPath();
         controls.AntColonyPathing.SpawnPoints.performed += _ => GetNewPoints();
     }
@@ -49,7 +49,6 @@ public class AntColonyOptimizer : MonoBehaviour {
 
     void Start() {
         PointManager = FindObjectOfType<PointManager>();
-        LineRenderer = FindObjectOfType<LineRenderer>();
     }
 
     // private void FindPath() {
@@ -105,6 +104,9 @@ public class AntColonyOptimizer : MonoBehaviour {
     //     animateAnt = true;
     // }
 
+    private void startAnt() {
+        StartCoroutine(AntSystemPath());
+    }
     IEnumerator AntSystemPath() {
         // http://www.cs.unibo.it/babaoglu/courses/cas05-06/tutorials/Ant_Colony_Optimization.pdf
         Destroy(Ant);
@@ -114,8 +116,10 @@ public class AntColonyOptimizer : MonoBehaviour {
         // Init ALl the LineRenders
         antLines = new LineRenderer[NumberAnts];
         for (int i = 0; i < NumberAnts; i++) {
-            antLines[i] = Instantiate(LineRenderer);
-            antLines[i].positionCount = num_circles + 1;
+            LineRenderer line = new GameObject().AddComponent<LineRenderer>();
+            line.widthMultiplier = .1f;
+            line.material = lineMaterial;
+            antLines[i] = line;
         }
         
         // Init circles array
@@ -139,12 +143,13 @@ public class AntColonyOptimizer : MonoBehaviour {
         
         // Do numIterations iterations
         float best_path_cost = Mathf.Infinity;
+        int best_path_index = 0;
         for (int iteration = 0; iteration < numIterations; iteration++) {
             GenerateAllPaths(NumberAnts, circles, paths, path_costs);
             PheromoneUpdate(paths, path_costs, circles);
             
             // Find best path
-            int best_path_index = 0;
+
             float best_path_cost_iteration = path_costs[0];
             for(int i = 1; i < NumberAnts; i++) {
                 if(path_costs[i] < best_path_cost_iteration) {
@@ -154,15 +159,14 @@ public class AntColonyOptimizer : MonoBehaviour {
             }
             if ( Math.Abs(best_path_cost_iteration - best_path_cost) < 0.001f) {
                 // Using a break here just freezes the unity editor for some reason
-                iteration = numIterations;
+                break;
             }
             // Draw best path
             DrawConnections(paths[best_path_index], 0, circles);
             yield return new WaitForSeconds(cycleUpdateRate);
         }
-        // Ant = Instantiate(AntPrefab, paths[0][0], Quaternion.identity);
-        // animateAnt = true;
-        yield return null;
+        Ant = Instantiate(AntPrefab, circles[paths[best_path_index][0]], Quaternion.identity);
+        animateAnt = true;
     }
 
     private void GenerateAllPaths(int num_paths, Vector3[] circles,  int[][] paths, float[] path_costs) {
@@ -275,6 +279,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     
     private void DrawConnections(int[] points, int lineRendererIndex, Vector3[] circles) {
         Vector3[] points_array = new Vector3[points.Length];
+        antLines[lineRendererIndex].positionCount = points.Length + 1;
         for (int i = 0; i < points.Length; i++) {
             points_array[i] = circles[points[i]];
         }
@@ -301,36 +306,31 @@ public class AntColonyOptimizer : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if (animateAnt) {
-            Vector3 nextPoint = LineRenderer.GetPosition(antPoint);
-            Vector3 antPos = Ant.transform.position;
-            if (Vector3.Distance(nextPoint, antPos) < Single.Epsilon) {
-                antPoint += 1;
-                if (antPoint == LineRenderer.positionCount)
-                    // The end of the array is the same as the first, so skip it 
-                    antPoint = 1;
-                nextPoint = LineRenderer.GetPosition(antPoint);
-            }
-
-            Ant.transform.position = Vector3.MoveTowards(
-                antPos,
-                nextPoint,
-                Time.deltaTime * antSpeed);
-        }
+        // if (animateAnt) {
+        //     Vector3 nextPoint = LineRenderer.GetPosition(antPoint);
+        //     Vector3 antPos = Ant.transform.position;
+        //     if (Vector3.Distance(nextPoint, antPos) < Single.Epsilon) {
+        //         antPoint += 1;
+        //         if (antPoint == LineRenderer.positionCount)
+        //             // The end of the array is the same as the first, so skip it 
+        //             antPoint = 1;
+        //         nextPoint = LineRenderer.GetPosition(antPoint);
+        //     }
+        //
+        //     Ant.transform.position = Vector3.MoveTowards(
+        //         antPos,
+        //         nextPoint,
+        //         Time.deltaTime * antSpeed);
+        // }
     }
 
     void ClearPath() {
         Debug.Log("Starting ClearPath");
-        StopAllCoroutines();
+       StopAllCoroutines();
         Debug.Log("Clearing path");
         if(antLines != null) {
-            Vector3[] points = new Vector3[1];
-            for(int i = 0; i < antLines.Length; i++) {
-                Debug.Log("Clearing line " + i);
-                if(antLines[i] != null) {
-                    antLines[i].positionCount = 0;
-                    antLines[i].SetPositions(points);
-                }
+            for (int i = 0; i < antLines.Length; i++) {
+                Destroy(antLines[i].gameObject);
             }
         }
         Debug.Log("Cleared path");
