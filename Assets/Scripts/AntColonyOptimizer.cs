@@ -9,6 +9,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     // Move the point spawning events into this class, we can regenerate when a point is removed
     [SerializeField] private GameObject AntPrefab;
     [SerializeField] private float antSpeed;
+    [SerializeField] private int numAnts;
     private GameObject Ant;
     private int antPoint;
     private bool animateAnt;
@@ -44,30 +45,40 @@ public class AntColonyOptimizer : MonoBehaviour {
         
         GenerateDistanceField();
         
-        int num_circles = PointManager.circles.Count, cur_circle = 0, path_length = 1;;
-        List<GameObject> circles = PointManager.circles;
-        HashSet<GameObject> closed_set = new HashSet<GameObject>();
-        GameObject[] path = new GameObject[PointManager.circles.Count];
+        int num_circles = PointManager.circles.Count, cur_circle = 0, path_length = 1;
 
-        path[0] = circles[cur_circle];
-        closed_set.Add(path[cur_circle]);
-        
-        while(path_length < num_circles) {
-            cur_circle = getBestCircle(cur_circle, closed_set, circles);
-            closed_set.Add(circles[cur_circle]);
-            path[path_length] = circles[cur_circle];
-            path_length += 1;
+        Vector3[] circles = new Vector3[num_circles];
+        for (int i = 0; i < num_circles; i++) {
+            circles[i] = PointManager.circles[i].transform.position;
         }
+        HashSet<Vector3> closed_set = new HashSet<Vector3>();
+        Vector3[][] paths = new Vector3[numAnts][];
+        for (int i = 0; i < numAnts; i++) {
+            paths[i] = new Vector3[num_circles];
+            paths[i][0] = circles[cur_circle];
+            closed_set.Add(paths[i][cur_circle]);
         
-        DrawConnections(path);
+            while(path_length < num_circles) {
+                cur_circle = getBestCircle(cur_circle, closed_set, circles);
+                closed_set.Add(circles[cur_circle]);
+                paths[i][path_length] = circles[cur_circle];
+                path_length += 1;
+            }
+        }
+
+        DrawConnections(paths[0]);
         
-        Ant = Instantiate(AntPrefab, path[0].transform.position, Quaternion.identity);
+        
+        Ant = Instantiate(AntPrefab, paths[0][0], Quaternion.identity);
         animateAnt = true;
     }
 
-    private int getBestCircle(int cur_circle, HashSet<GameObject> closed_set, List<GameObject> circles) {
+    private void GetPathCost(GameObject[] path) {
+        
+    }
+    private int getBestCircle(int cur_circle, HashSet<Vector3> closed_set, Vector3[] circles) {
         // Given a circle index, find the most desirable unexplored circle
-        int num_circles = circles.Count, best_circle = 0;
+        int num_circles = circles.Length, best_circle = 0;
         float distance, current_desirability;
         float best_desirability = 0;
         for (int i = 0; i < num_circles; i++) {
@@ -84,16 +95,12 @@ public class AntColonyOptimizer : MonoBehaviour {
         return best_circle;
     }
     
-    private void DrawConnections(GameObject[] objects) {
-        int num_circles = objects.Length;
+    private void DrawConnections(Vector3[] points) {
+        int num_circles = points.Length;
         // +1 for connecting the end to the start
         LineRenderer.positionCount = num_circles+1;
-        Vector3[] points = new Vector3[num_circles+1];
-        for (int i = 0; i < num_circles; i++) {
-            points[i] = objects[i].transform.position;
-        }
-        points[num_circles] = points[0];
         LineRenderer.SetPositions(points);
+        LineRenderer.SetPosition(num_circles, points[0]);
     }
     private void GenerateDistanceField() {
         int numCircles = PointManager.circles.Count;
