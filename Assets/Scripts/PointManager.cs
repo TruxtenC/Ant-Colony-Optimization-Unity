@@ -18,11 +18,8 @@ public class PointManager : MonoBehaviour {
     public List<GameObject> circles;
     
 
-    void Awake() {
-        controls = new InputManager();
-        controls.AntColonyPathing.SpawnPoint.performed += _ => SpawnPointOnMouse();
 
-    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -34,10 +31,10 @@ public class PointManager : MonoBehaviour {
     {
     }
 
-    void SpawnPointOnMouse() {
+    public bool SpawnPointOnMouse() {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(
             Mouse.current.position.ReadValue());
-        TrySpawnPoint(mousePos, remove: true);
+        return TrySpawnPoint(mousePos, remove: true);
     }
     
     private bool TrySpawnPoint(Vector3 pos, bool remove=false) {
@@ -77,12 +74,5 @@ public class PointManager : MonoBehaviour {
                 Random.Range(boundsOffset, Screen.height - boundsOffset),
                 0)
         );
-    }
-    private void OnEnable() {
-        controls.Enable();
-    }
-
-    private void OnDisable() {
-        controls.Disable();
     }
 }
