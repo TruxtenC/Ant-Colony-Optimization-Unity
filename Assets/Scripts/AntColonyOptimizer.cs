@@ -41,40 +41,47 @@ public class AntColonyOptimizer : MonoBehaviour {
     }
 
     private void FindPath() {
-        int num_circles = PointManager.circles.Count;
+        
+        GenerateDistanceField();
+        
+        int num_circles = PointManager.circles.Count, cur_circle = 0, path_length = 1;;
         List<GameObject> circles = PointManager.circles;
         HashSet<GameObject> closed_set = new HashSet<GameObject>();
-        GenerateDistanceField();
         GameObject[] path = new GameObject[PointManager.circles.Count];
-        // Starting from the first circle, iterate through, and find the most desirable
-        // path
-        float distance, current_desirability, best_desirability;
-        int best_circle = 0, cur_circle = 0;
+
         path[0] = circles[cur_circle];
         closed_set.Add(path[cur_circle]);
-        int path_length = 1;
-        // n - 1 connections in acyclic path
+        
         while(path_length < num_circles) {
-            best_desirability = 0;
-            for (int i = 0; i < num_circles; i++) {
-                if (closed_set.Contains(circles[i])) {
-                    continue;
-                }
-                distance = distanceField[cur_circle, i];
-                current_desirability = Mathf.Pow(1 / distance, desirePower);
-                if (best_desirability < current_desirability) {
-                    best_desirability = current_desirability;
-                    best_circle = i;
-                }
-            }
-            path[path_length] = circles[best_circle];
-            closed_set.Add(circles[best_circle]);
-            cur_circle = best_circle;
+            cur_circle = getBestCircle(cur_circle, closed_set, circles);
+            closed_set.Add(circles[cur_circle]);
+            path[path_length] = circles[cur_circle];
             path_length += 1;
         }
+        
         DrawConnections(path);
+        
         Ant = Instantiate(AntPrefab, path[0].transform.position, Quaternion.identity);
         animateAnt = true;
+    }
+
+    private int getBestCircle(int cur_circle, HashSet<GameObject> closed_set, List<GameObject> circles) {
+        // Given a circle index, find the most desirable unexplored circle
+        int num_circles = circles.Count, best_circle = 0;
+        float distance, current_desirability;
+        float best_desirability = 0;
+        for (int i = 0; i < num_circles; i++) {
+            if (closed_set.Contains(circles[i])) {
+                continue;
+            }
+            distance = distanceField[cur_circle, i];
+            current_desirability = Mathf.Pow(1 / distance, desirePower);
+            if (best_desirability < current_desirability) {
+                best_desirability = current_desirability;
+                best_circle = i;
+            }
+        }
+        return best_circle;
     }
     
     private void DrawConnections(GameObject[] objects) {
@@ -127,11 +134,9 @@ public class AntColonyOptimizer : MonoBehaviour {
         LineRenderer.positionCount = 0;
         LineRenderer.SetPositions(new Vector3[0]);
         PointManager.ClearPoints();
-        if (Ant) {
-            Destroy(Ant);
-            animateAnt = false;
-            antPoint = 1;
-        }
+        Destroy(Ant);
+        animateAnt = false;
+        antPoint = 1;
     }
     private void OnEnable() {
         controls.Enable();
