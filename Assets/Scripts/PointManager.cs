@@ -21,7 +21,6 @@ public class PointManager : MonoBehaviour {
     void Awake() {
         controls = new InputManager();
         controls.AntColonyPathing.SpawnPoint.performed += _ => SpawnPointOnMouse();
-        controls.AntColonyPathing.SpawnPoints.performed += _ => RandomlyGeneratePoints();
         numPoints = 10;
 
     }
@@ -63,8 +62,7 @@ public class PointManager : MonoBehaviour {
         circles = new List<GameObject>();
     }
 
-    void RandomlyGeneratePoints() {
-        ClearPoints();
+    public void RandomlyGeneratePoints() {
         Vector3 potentialPos;
         for(int i = 0; i < numPoints; i++) {
             potentialPos = getRandomPosInCamera();

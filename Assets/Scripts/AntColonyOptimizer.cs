@@ -7,18 +7,31 @@ using UnityEngine;
 public class AntColonyOptimizer : MonoBehaviour {
     // TODO:
     // Move the point spawning events into this class, we can regenerate when a point is removed
+    [SerializeField] private GameObject AntPrefab;
+    [SerializeField] private float antSpeed;
+    private GameObject Ant;
+    private int antPoint;
+    private bool animateAnt;
     private PointManager PointManager;
     private LineRenderer LineRenderer;
     private InputManager controls;
     private float[,] distanceField;
-
+    private float distanceEpsilon;
     [SerializeField] float desirePower;
     // Start is called before the first frame update
 
     private void Awake() {
         controls = new InputManager();
+        antPoint = 1;
+        distanceEpsilon = .1f;
         controls.AntColonyPathing.FindPath.performed += _ => FindPath();
         controls.AntColonyPathing.ClearPoints.performed += _ => ClearPath();
+        controls.AntColonyPathing.SpawnPoints.performed += _ => GetNewPoints();
+    }
+
+    private void GetNewPoints() {
+        ClearPath();
+        PointManager.RandomlyGeneratePoints();
     }
 
     void Start() {
@@ -60,6 +73,8 @@ public class AntColonyOptimizer : MonoBehaviour {
             path_length += 1;
         }
         DrawConnections(path);
+        Ant = Instantiate(AntPrefab, path[0].transform.position, Quaternion.identity);
+        animateAnt = true;
     }
     
     private void DrawConnections(GameObject[] objects) {
@@ -91,12 +106,32 @@ public class AntColonyOptimizer : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        
+        if (animateAnt) {
+            Vector3 nextPoint = LineRenderer.GetPosition(antPoint);
+            Vector3 antPos = Ant.transform.position;
+            if (Vector3.Distance(nextPoint, antPos) < Single.Epsilon) {
+                antPoint += 1;
+                if (antPoint == LineRenderer.positionCount)
+                    // The end of the array is the same as the first, so skip it 
+                    antPoint = 1;
+                nextPoint = LineRenderer.GetPosition(antPoint);
+            }
+            Ant.transform.position = Vector3.MoveTowards(
+                antPos,
+                nextPoint,
+                Time.deltaTime * antSpeed);
+        }
     }
 
     void ClearPath() {
         LineRenderer.positionCount = 0;
+        LineRenderer.SetPositions(new Vector3[0]);
         PointManager.ClearPoints();
+        if (Ant) {
+            Destroy(Ant);
+            animateAnt = false;
+            antPoint = 1;
+        }
     }
     private void OnEnable() {
         controls.Enable();
@@ -105,4 +140,5 @@ public class AntColonyOptimizer : MonoBehaviour {
     private void OnDisable() {
         controls.Disable();
     }
+    
 }
