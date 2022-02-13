@@ -17,6 +17,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     private LineRenderer LineRenderer;
     private InputManager controls;
     private float[,] distanceField;
+    private float[,] pheromones;
     private float distanceEpsilon;
     [SerializeField] float desirePower;
     // Start is called before the first frame update
@@ -110,14 +111,38 @@ public class AntColonyOptimizer : MonoBehaviour {
             if (closed_set.Contains(circles[i])) {
                 continue;
             }
-            distance = distanceField[cur_circle, i];
-            current_desirability = Mathf.Pow(1 / distance, desirePower);
+            current_desirability = AttractivenessHeuristic(cur_circle, i);
             if (best_desirability < current_desirability) {
                 best_desirability = current_desirability;
                 best_circle = i;
             }
         }
         return best_circle;
+    }
+
+    private int ChooseNextPointP(int cur_circle, HashSet<Vector3> closed_set, Vector3[] circles) {
+        // We compute the attractiveness of t
+        int num_circles = circles.Length, best_circle = cur_circle;
+        float distance, a, ph;
+        float best_desirability = 0;
+        float[] probs = new float[num_circles];
+        for (int i = 0; i < num_circles; i++) {
+            if (closed_set.Contains(circles[i])) {
+                probs[i] = 0;
+                continue;
+            }
+            a = AttractivenessHeuristic(cur_circle, i);
+            ph = pheromones[cur_circle, i];
+            probs[i] = a * ph;
+        }
+        // return the ith element of the with with probs[i] probability;
+        return best_circle;
+    }
+
+    private float AttractivenessHeuristic(int p1, int p2) {
+        // Simple distance 
+        float distance = distanceField[p1, p2];
+        return Mathf.Pow(1 / distance, desirePower);
     }
     
     private void DrawConnections(Vector3[] points) {

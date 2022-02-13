@@ -287,6 +287,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AntPrefab: {fileID: 3765693955387482239, guid: c804b8de9f1fd8845b26255206bd62e0, type: 3}
   antSpeed: 2.5
+  NumberAnts: 1
   desirePower: 1
 --- !u!1 &705507993
 GameObject:
