@@ -9,7 +9,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     // Move the point spawning events into this class, we can regenerate when a point is removed
     [SerializeField] private GameObject AntPrefab;
     [SerializeField] private float antSpeed;
-    [SerializeField] private int numAnts;
+    [SerializeField] private int NumberAnts;
     private GameObject Ant;
     private int antPoint;
     private bool animateAnt;
@@ -42,43 +42,68 @@ public class AntColonyOptimizer : MonoBehaviour {
     }
 
     private void FindPath() {
+        Destroy(Ant);
+        antPoint = 1;
         
         GenerateDistanceField();
         
-        int num_circles = PointManager.circles.Count, cur_circle = 0, path_length = 1;
+        int num_circles = PointManager.circles.Count, cur_circle = 0;
+        int numAnts = NumberAnts;
+        if (NumberAnts < num_circles) {
+            numAnts = num_circles;
+        }
 
         Vector3[] circles = new Vector3[num_circles];
         for (int i = 0; i < num_circles; i++) {
             circles[i] = PointManager.circles[i].transform.position;
         }
-        HashSet<Vector3> closed_set = new HashSet<Vector3>();
-        Vector3[][] paths = new Vector3[numAnts][];
-        for (int i = 0; i < numAnts; i++) {
-            paths[i] = new Vector3[num_circles];
-            paths[i][0] = circles[cur_circle];
-            closed_set.Add(paths[i][cur_circle]);
         
+        Vector3[][] paths = new Vector3[numAnts][];
+        Vector3[] best_path = new Vector3[0];
+        float best_path_cost = Mathf.Infinity;
+        
+        for (int i = 0; i < numAnts; i++) {
+            int path_length = 1;
+            HashSet<Vector3> closed_set = new HashSet<Vector3>();
+            
+            paths[i] = new Vector3[num_circles];
+            paths[i][0] = circles[i];
+            closed_set.Add(circles[i]);
+            
+            cur_circle = i;
             while(path_length < num_circles) {
                 cur_circle = getBestCircle(cur_circle, closed_set, circles);
                 closed_set.Add(circles[cur_circle]);
                 paths[i][path_length] = circles[cur_circle];
                 path_length += 1;
             }
-        }
 
-        DrawConnections(paths[0]);
+            float path_cost = GetPathCost(paths[i]);
+            if (path_cost < best_path_cost) {
+                best_path = paths[i];
+                best_path_cost = path_cost;
+            }
+        }
         
+        if (best_path.Length == 0)
+            return;
+                
+        DrawConnections(best_path);
         
-        Ant = Instantiate(AntPrefab, paths[0][0], Quaternion.identity);
+        Ant = Instantiate(AntPrefab, best_path[0], Quaternion.identity);
         animateAnt = true;
     }
 
-    private void GetPathCost(GameObject[] path) {
-        
+    private float GetPathCost(Vector3[] path) {
+        float totalCost = 0;
+        for (int i = 1; i < path.Length; i++) {
+            totalCost += Vector3.Distance(path[i - 1], path[i]);
+        }
+        return totalCost;
     }
     private int getBestCircle(int cur_circle, HashSet<Vector3> closed_set, Vector3[] circles) {
         // Given a circle index, find the most desirable unexplored circle
-        int num_circles = circles.Length, best_circle = 0;
+        int num_circles = circles.Length, best_circle = cur_circle;
         float distance, current_desirability;
         float best_desirability = 0;
         for (int i = 0; i < num_circles; i++) {
