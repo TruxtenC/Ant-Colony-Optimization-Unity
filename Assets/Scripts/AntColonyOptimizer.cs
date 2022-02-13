@@ -14,6 +14,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     // TODO:
     // Move the point spawning events into this class, we can regenerate when a point is removed
     [SerializeField] private GameObject AntPrefab;
+
     [SerializeField] private float antSpeed;
     [SerializeField] private int NumberAnts;
     private GameObject Ant;
@@ -30,6 +31,7 @@ public class AntColonyOptimizer : MonoBehaviour {
     [SerializeField] float cycleUpdateRate = .5f;
     private LineRenderer[] antLines;
     [SerializeField] Material lineMaterial;
+
     private float[,] deltaPheromones;
     // Start is called before the first frame update
 
@@ -51,62 +53,10 @@ public class AntColonyOptimizer : MonoBehaviour {
         PointManager = FindObjectOfType<PointManager>();
     }
 
-    // private void FindPath() {
-    //     Destroy(Ant);
-    //     antPoint = 1;
-    //
-    //     GenerateDistanceField();
-    //
-    //     int num_circles = PointManager.circles.Count, cur_circle = 0;
-    //     int numAnts = NumberAnts;
-    //     if (NumberAnts < num_circles) {
-    //         numAnts = num_circles;
-    //     }
-    //
-    //     Vector3[] circles = new Vector3[num_circles];
-    //     for (int i = 0; i < num_circles; i++) {
-    //         circles[i] = PointManager.circles[i].transform.position;
-    //     }
-    //
-    //     Vector3[][] paths = new Vector3[numAnts][];
-    //     Vector3[] best_path = new Vector3[0];
-    //     float best_path_cost = Mathf.Infinity;
-    //
-    //     for (int i = 0; i < numAnts; i++) {
-    //         int path_length = 1;
-    //         HashSet<Vector3> closed_set = new HashSet<Vector3>();
-    //
-    //         paths[i] = new Vector3[num_circles];
-    //         paths[i][0] = circles[i];
-    //         closed_set.Add(circles[i]);
-    //
-    //         cur_circle = i;
-    //         while (path_length < num_circles) {
-    //             cur_circle = getBestCircle(cur_circle, closed_set, circles);
-    //             closed_set.Add(circles[cur_circle]);
-    //             paths[i][path_length] = circles[cur_circle];
-    //             path_length += 1;
-    //         }
-    //
-    //         float path_cost = GetPathCost(paths[i], circles);
-    //         if (path_cost < best_path_cost) {
-    //             best_path = paths[i];
-    //             best_path_cost = path_cost;
-    //         }
-    //     }
-    //
-    //     if (best_path.Length == 0)
-    //         return;
-    //
-    //     DrawConnections(best_path, 0);
-    //
-    //     Ant = Instantiate(AntPrefab, best_path[0], Quaternion.identity);
-    //     animateAnt = true;
-    // }
-
     private void startAnt() {
         StartCoroutine(AntSystemPath());
     }
+
     IEnumerator AntSystemPath() {
         // http://www.cs.unibo.it/babaoglu/courses/cas05-06/tutorials/Ant_Colony_Optimization.pdf
         Destroy(Ant);
@@ -121,13 +71,13 @@ public class AntColonyOptimizer : MonoBehaviour {
             line.material = lineMaterial;
             antLines[i] = line;
         }
-        
+
         // Init circles array
         Vector3[] circles = new Vector3[num_circles];
         for (int i = 0; i < num_circles; i++) {
             circles[i] = PointManager.circles[i].transform.position;
         }
-        
+
         // Initialize pheromones
         pheromones = new float[num_circles, num_circles];
         deltaPheromones = new float[num_circles, num_circles];
@@ -140,44 +90,47 @@ public class AntColonyOptimizer : MonoBehaviour {
 
         int[][] paths = new int[NumberAnts][];
         float[] path_costs = new float[NumberAnts];
-        
+
         // Do numIterations iterations
         float best_path_cost = Mathf.Infinity;
         int best_path_index = 0;
         for (int iteration = 0; iteration < numIterations; iteration++) {
             GenerateAllPaths(NumberAnts, circles, paths, path_costs);
             PheromoneUpdate(paths, path_costs, circles);
-            
+
             // Find best path
 
             float best_path_cost_iteration = path_costs[0];
-            for(int i = 1; i < NumberAnts; i++) {
-                if(path_costs[i] < best_path_cost_iteration) {
+            for (int i = 1; i < NumberAnts; i++) {
+                if (path_costs[i] < best_path_cost_iteration) {
                     best_path_index = i;
                     best_path_cost_iteration = path_costs[i];
                 }
             }
-            if ( Math.Abs(best_path_cost_iteration - best_path_cost) < 0.001f) {
+
+            if (Math.Abs(best_path_cost_iteration - best_path_cost) < 0.001f) {
                 // Using a break here just freezes the unity editor for some reason
                 break;
             }
+
             // Draw best path
             DrawConnections(paths[best_path_index], 0, circles);
             yield return new WaitForSeconds(cycleUpdateRate);
         }
+
         Ant = Instantiate(AntPrefab, circles[paths[best_path_index][0]], Quaternion.identity);
         animateAnt = true;
     }
 
-    private void GenerateAllPaths(int num_paths, Vector3[] circles,  int[][] paths, float[] path_costs) {
+    private void GenerateAllPaths(int num_paths, Vector3[] circles, int[][] paths, float[] path_costs) {
         // Function modifies all the input arrays in place
         int num_circles = circles.Length;
         for (int i = 0; i < num_paths; i++) {
-            int cur_circle = Random.Range(0, num_circles-1);
+            int cur_circle = Random.Range(0, num_circles - 1);
 
             HashSet<Vector3> closed_set = new HashSet<Vector3>();
             closed_set.Add(circles[cur_circle]);
-            
+
             paths[i] = new int[num_circles];
             paths[i][0] = cur_circle;
 
@@ -193,11 +146,13 @@ public class AntColonyOptimizer : MonoBehaviour {
             path_costs[i] = path_cost;
         }
     }
+
     private float GetPathCost(int[] path, Vector3[] circles) {
         float totalCost = 0;
         for (int i = 1; i < path.Length; i++) {
-            totalCost += Vector3.Distance(circles[path[i]], circles[path[i-1]]);
+            totalCost += Vector3.Distance(circles[path[i]], circles[path[i - 1]]);
         }
+
         return totalCost;
     }
 
@@ -230,11 +185,13 @@ public class AntColonyOptimizer : MonoBehaviour {
                 probs[i] = 0;
                 continue;
             }
+
             a = AttractivenessHeuristic(cur_circle, i);
             ph = pheromones[cur_circle, i];
             // alpha is set to 1, beta is handled in AttractivenessHeuristic
             probs[i] = a * ph;
         }
+
         // return the ith circle with probability props[i]
         return PickRandomPointGivenProbability(circles, probs);
     }
@@ -244,7 +201,7 @@ public class AntColonyOptimizer : MonoBehaviour {
         float distance = distanceField[p1, p2];
         return Mathf.Pow(1 / distance, desirePower);
     }
-    
+
     private void UpdateDeltaPhenomone(int[] path, int p1, int p2, Vector3[] circles, float path_cost) {
         // Returns 0 if there is no link between p1 and p2 in path
         // else return  1 / path_cost
@@ -254,6 +211,7 @@ public class AntColonyOptimizer : MonoBehaviour {
             deltaPheromones[p1, p2] += 1 / path_cost;
             return;
         }
+
         for (int i = 0; i < num_circles - 1; i++) {
             if (path[i] == p1 && path[i + 1] == p2) {
                 deltaPheromones[p1, p2] += 1 / path_cost;
@@ -261,7 +219,7 @@ public class AntColonyOptimizer : MonoBehaviour {
             }
         }
     }
-    
+
     private void PheromoneUpdate(int[][] paths, float[] path_costs, Vector3[] circles) {
         int num_circles = circles.Length;
         // Update the pheromones by the following:
@@ -269,20 +227,21 @@ public class AntColonyOptimizer : MonoBehaviour {
         for (int x = 0; x < num_circles; x++) {
             for (int y = 0; y < num_circles; y++) {
                 pheromones[x, y] = pheromoneEvaporateRate * pheromones[x, y];
-                for(int i = 0; i < paths.Length; i++) {
+                for (int i = 0; i < paths.Length; i++) {
                     UpdateDeltaPhenomone(paths[i], x, y, circles, path_costs[i]);
                     pheromones[x, y] += deltaPheromones[x, y];
                 }
             }
         }
     }
-    
+
     private void DrawConnections(int[] points, int lineRendererIndex, Vector3[] circles) {
         Vector3[] points_array = new Vector3[points.Length];
         antLines[lineRendererIndex].positionCount = points.Length + 1;
         for (int i = 0; i < points.Length; i++) {
             points_array[i] = circles[points[i]];
         }
+
         antLines[lineRendererIndex].SetPositions(points_array);
         antLines[lineRendererIndex].SetPosition(points_array.Length, points_array[0]);
     }
@@ -326,13 +285,14 @@ public class AntColonyOptimizer : MonoBehaviour {
 
     void ClearPath() {
         Debug.Log("Starting ClearPath");
-       StopAllCoroutines();
+        StopAllCoroutines();
         Debug.Log("Clearing path");
-        if(antLines != null) {
+        if (antLines != null) {
             for (int i = 0; i < antLines.Length; i++) {
                 Destroy(antLines[i].gameObject);
             }
         }
+
         Debug.Log("Cleared path");
         PointManager.ClearPoints();
         Debug.Log("Cleared points");
@@ -353,14 +313,17 @@ public class AntColonyOptimizer : MonoBehaviour {
                 return i;
             }
         }
+
         Debug.Log("Error! probabilities array: ");
         foreach (float p in probabilities) {
             Debug.Log(p);
         }
+
         Debug.Log("Pheromone array: ");
         foreach (float p in pheromones) {
             Debug.Log(p);
         }
+
         // If we get here, something went wrong
         return -1;
     }
