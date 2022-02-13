@@ -21,7 +21,6 @@ public class PointManager : MonoBehaviour {
     void Awake() {
         controls = new InputManager();
         controls.AntColonyPathing.SpawnPoint.performed += _ => SpawnPointOnMouse();
-        numPoints = 10;
 
     }
     // Start is called before the first frame update
