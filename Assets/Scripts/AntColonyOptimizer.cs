@@ -31,6 +31,9 @@ public class AntColonyOptimizer : MonoBehaviour {
     [SerializeField] float cycleUpdateRate = .5f;
     private LineRenderer[] antLines;
     [SerializeField] Material lineMaterial;
+    [SerializeField] Color bestPathColor;
+    [SerializeField] Material bestPathMaterial;
+    [SerializeField] Material normalMaterial;
 
     private const float TOLERANCE = .0001f;
 
@@ -111,10 +114,11 @@ public class AntColonyOptimizer : MonoBehaviour {
             for (int i = 0; i < NumberAnts; i++) {
                 // White = best path -- black = worst path
                 float alpha = (path_costs[i] - worst_path_cost_iteration) / delta;
+                Color line_color = Color.white;
+                Material line_material;
                 if (Mathf.Abs(1 - alpha) > TOLERANCE) {
-                    alpha *= .2f;
+                    line_color.a = alpha * .05f;
                 }
-                Color line_color = new Color( 1, 1, 1, alpha);
                 DrawConnections(paths[i], i, circles, line_color);
             }
             yield return new WaitForSeconds(cycleUpdateRate);
@@ -253,6 +257,7 @@ public class AntColonyOptimizer : MonoBehaviour {
         antLines[lineRendererIndex].SetPosition(points_array.Length, points_array[0]);
         antLines[lineRendererIndex].material.SetColor("_Color", color);
         antLines[lineRendererIndex].textureMode = LineTextureMode.Tile;
+        antLines[lineRendererIndex].widthMultiplier = 0.05f;
     }
 
     private void GenerateDistanceField() {
