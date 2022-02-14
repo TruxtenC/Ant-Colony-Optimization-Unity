@@ -1,4 +1,4 @@
-# Ant Colony Optimization In Unity # 
+# Ant Colony Optimization In Unity #
 
 ![alt text](https://github.com/TruxtenC/Ant-Colony-Optimization-Unity/blob/main/ACO.gif "ACO Example")
 
